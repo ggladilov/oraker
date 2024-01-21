@@ -15,4 +15,4 @@ repos:
   hooks:
   - id: gitlint
   - id: gitlint-ci
-    args: [--debug, --commits, "origin/HEAD..HEAD"]
+    args: [--debug, --commits, origin/main..HEAD]

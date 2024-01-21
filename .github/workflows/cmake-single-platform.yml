@@ -9,9 +9,37 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    # see https://github.com/actions/checkout
+    - uses: actions/checkout@v4
+      with:
+        # fetch all history for all tags and branches
+        # gitlint-ci used below to check commits messages uses "git rev-list origin/main..HEAD" as target commits
+        # origin/main isn't resolved by default (fetch-depth: 1), as only the PR branch is fetched
+        fetch-depth: 0
+        # checkout pull request HEAD commit instead of merge commit
+        # merge commit is created implicitly by github even if rebase merge is configured for repo
+        # this way "git rev-list origin/main..HEAD" generates the same result as locally
+        ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Resolve dependencies
+    - name: Setup python
+      uses: actions/setup-python@v4
+      with:
+        # this is the version tested locally
+        python-version: '3.9.6'
+
+    - name: Resolve Python dependencies
+      run: pip install -r ${{github.workspace}}/requirements.txt
+
+    # by default this isn't required as pre-commit automatically installs all dependencies
+    # however, there's a bug causing automatic installation to fail due to versions incompatibilities
+    # use this workaround from https://github.com/pypa/pip/issues/12372#issuecomment-1857964529
+    - name: Install pre-commit hooks
+      run: pre-commit clean && VIRTUALENV_PIP=23.2.1 pre-commit install-hooks
+
+    - name: Test commits messages
+      run: pre-commit run --hook-stage manual gitlint-ci
+
+    - name: Resolve C++ dependencies
       run: brew install opencv llvm
 
     - name: Configure
