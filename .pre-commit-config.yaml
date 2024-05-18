@@ -9,3 +9,10 @@ repos:
     args: [--assume-in-merge]
   - id: mixed-line-ending
     args: [--fix=no]
+
+- repo: https://github.com/jorisroovers/gitlint
+  rev: v0.19.1
+  hooks:
+  - id: gitlint
+  - id: gitlint-ci
+    args: [--debug, --commits, origin/main..HEAD]
